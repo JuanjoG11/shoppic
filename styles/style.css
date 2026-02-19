@@ -166,9 +166,13 @@ body {
     align-items: center;
     gap: 30px;
     perspective: 1500px;
+    -webkit-perspective: 1500px;
+    /* Safari fix */
     min-height: 450px;
     position: relative;
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    /* Safari fix */
 }
 
 .card-3d {
@@ -176,11 +180,19 @@ body {
     height: 400px;
     position: absolute;
     transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    -webkit-transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    /* Safari fix */
     cursor: pointer;
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    /* Safari fix */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Safari fix */
     opacity: 0;
     pointer-events: none;
     z-index: 1;
+    will-change: transform, opacity;
 }
 
 /* 3D Cover Flow Logic */
@@ -228,6 +240,12 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: #111;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Safari fix */
+    transform: translateZ(0);
+    /* Force layer promotion */
+    -webkit-transform: translateZ(0);
 }
 
 .card-3d.active .card-inner {
