@@ -127,7 +127,7 @@ function initScrollAnimations() {
     }, { threshold: 0.1 });
 
     window.observeNewItems = () => {
-        document.querySelectorAll('.product-card:not(.observed)').forEach(card => {
+        document.querySelectorAll('.product-card:not(.observed), .wholesale-card:not(.observed), .wholesale-title:not(.observed)').forEach(card => {
             card.classList.add('observed');
             observer.observe(card);
         });

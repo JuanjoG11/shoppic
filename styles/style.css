@@ -179,16 +179,13 @@ body {
     width: 280px;
     height: 400px;
     position: absolute;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    -webkit-transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    /* Safari fix */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
-    /* Safari fix */
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    /* Safari fix */
     opacity: 0;
     pointer-events: none;
     z-index: 1;
@@ -199,36 +196,36 @@ body {
 .card-3d.active {
     opacity: 1;
     pointer-events: auto;
-    transform: translate3d(0, 0, 150px) rotateY(0deg);
+    transform: translate3d(0, 0, 100px) rotateY(0deg);
     z-index: 10;
 }
 
 .card-3d.prev-card {
-    opacity: 0.9 !important;
-    /* High visibility for 3-card stack */
+    opacity: 1 !important;
     pointer-events: auto;
-    transform: translate3d(-190px, 0, -50px) rotateY(25deg) scale(0.92);
+    transform: translate3d(-240px, 0, -80px) rotateY(15deg) scale(0.9);
     z-index: 5;
-    filter: brightness(0.85);
+    filter: brightness(0.8);
 }
 
 .card-3d.next-card {
-    opacity: 0.9 !important;
-    /* High visibility for 3-card stack */
+    opacity: 1 !important;
     pointer-events: auto;
-    transform: translate3d(190px, 0, -50px) rotateY(-25deg) scale(0.92);
+    transform: translate3d(240px, 0, -80px) rotateY(-15deg) scale(0.9);
     z-index: 5;
-    filter: brightness(0.85);
+    filter: brightness(0.8);
 }
 
 .card-3d.far-prev {
-    transform: translate3d(-300px, 0, -100px) rotateY(60deg) scale(0.7);
+    transform: translate3d(-400px, 0, -150px) rotateY(45deg) scale(0.7);
     opacity: 0;
+    pointer-events: none;
 }
 
 .card-3d.far-next {
-    transform: translate3d(300px, 0, -100px) rotateY(-60deg) scale(0.7);
+    transform: translate3d(400px, 0, -150px) rotateY(-45deg) scale(0.7);
     opacity: 0;
+    pointer-events: none;
 }
 
 .card-inner {
@@ -514,10 +511,14 @@ body {
     background: #333;
 }
 
-@keyframes fadeUpSlow {
+.animate-reveal {
+    animation: fadeUpReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeUpReveal {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(40px);
     }
 
     to {
@@ -719,7 +720,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* 3D Carousel Animation */
+/* 3D Carousel Animation - Removed auto-rotation to fix flickering/disappearing */
 .cards-3d-container {
     display: flex;
     justify-content: center;
@@ -727,64 +728,144 @@ body {
     gap: 2rem;
     padding: 4rem 0;
     transform-style: preserve-3d;
-    animation: rotateCarousel 20s infinite linear;
-    /* Auto-rotation */
+    perspective: 1200px;
 }
 
-/* Pause rotation on hover for interaction */
-.cards-3d-container:hover {
-    animation-play-state: paused;
+/* WHOLESALE SECTION - PREMIUM IMPACT */
+.wholesale-section {
+    padding: 6rem 5%;
+    background: radial-gradient(circle at center, #111 0%, #000 100%);
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-@keyframes rotateCarousel {
-    0% {
-        transform: perspective(1000px) rotateY(0deg);
-    }
-
-    100% {
-        transform: perspective(1000px) rotateY(360deg);
-    }
+.wholesale-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    z-index: 0;
 }
 
-/* Enhancing 3D Cards for Rotation */
-.card-3d {
-    /* Ensure cards face outward if we were doing a true cylinder,
-       but for this flex layout, we'll stick to a simpler "floating" animation
-       or simpler 3D effect since a true cylinder requires absolute positioning calculation.
-
-       Let's stick to the user's "images rotating" request.
-       If they want a cylinder, the CSS needs to change to absolute positioning.
-       Let's try a "Flow" animation instead of full cylinder to keep it responsive/simple first,
-       OR better: keep the tilted look but animate the floating.
-    */
-    animation: floatCard 6s ease-in-out infinite;
+.wholesale-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    text-align: center;
 }
 
-.card-3d:nth-child(even) {
-    animation-delay: 1s;
+.wholesale-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: #000;
+    padding: 0.5rem 2rem;
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 1.5rem;
+    transform: skewX(-15deg);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
 
-.card-3d:nth-child(odd) {
-    animation-delay: 2s;
+.wholesale-title {
+    font-family: var(--font-main);
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 0.9;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 3.5rem;
+    letter-spacing: -2px;
 }
 
-@keyframes floatCard {
-
-    0%,
-    100% {
-        transform: translateY(0) rotateY(15deg);
-    }
-
-    50% {
-        transform: translateY(-20px) rotateY(10deg);
-    }
+.gold-text {
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
 }
 
-/* Redeclaring container for safer non-cylinder animation first to avoid breaking layout */
-.cards-3d-container {
-    animation: none;
-    /* Resetting the cylinder rotation to avoid dizziness if not set up as cylinder */
-    perspective: 1000px;
+.wholesale-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 4rem;
+}
+
+.wholesale-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    transition: all 0.4s ease;
+}
+
+.wholesale-card i {
+    font-size: 3.5rem;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    transition: 0.4s;
+}
+
+.wholesale-card h3 {
+    font-family: var(--font-main);
+    font-size: 2.2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.wholesale-card p {
+    color: #aaa;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.wholesale-card:hover {
+    transform: translateY(-15px);
+    background: rgba(212, 175, 55, 0.05);
+    border-color: var(--gold);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.wholesale-card.highlight {
+    border-color: rgba(212, 175, 55, 0.5);
+    background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
+}
+
+.wholesale-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #fff;
+    color: #000;
+    padding: 1.2rem 3.5rem;
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 1.5rem;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.4s ease;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+}
+
+.wholesale-cta i {
+    font-size: 1.8rem;
+    color: #25D366;
+}
+
+.wholesale-cta:hover {
+    transform: scale(1.05);
+    background: var(--gold);
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
 }
 
 /* CART DRAWER REDESIGN */
