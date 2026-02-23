@@ -362,23 +362,29 @@ function checkoutWhatsApp() {
     }
 
     const phoneNumber = "573150665892";
-    let message = "¡Hola SHOPPIC! 👋 Quisiera realizar el siguiente pedido:\n\n";
+    let message = "SOLICITUD DE PEDIDO - SHOPPIC ✨\n\n";
 
-    message += `🙋 *CLIENTE:* ${name}\n`;
-    message += `🏙️ *CIUDAD:* ${city}\n`;
-    message += `📍 *DIRECCIÓN:* ${address}\n`;
-    message += `📱 *TELÉFONO:* ${phone}\n\n`;
-    message += "🛒 *DETALLE DEL PEDIDO:*\n";
+    message += "DATOS DEL CLIENTE\n";
+    message += "----------------------------\n";
+    message += `• Nombre: ${name}\n`;
+    message += `• Ciudad: ${city}\n`;
+    message += `• Dirección: ${address}\n`;
+    message += `• Teléfono: ${phone}\n\n`;
+
+    message += "DETALLE DEL PEDIDO\n";
+    message += "----------------------------\n";
 
     let total = 0;
     cart.forEach(item => {
         const subtotal = item.price * item.quantity;
         total += subtotal;
-        message += `• *${item.title}*\n  Cant: ${item.quantity} x $${item.price.toLocaleString('es-CO')} = *$${subtotal.toLocaleString('es-CO')}*\n\n`;
+        message += `• ${item.title} (x${item.quantity})\n  Subtotal: $${subtotal.toLocaleString('es-CO')}\n\n`;
     });
 
-    message += `💰 *TOTAL A PAGAR: $${total.toLocaleString('es-CO')} COP*\n\n`;
-    message += "Quedo atento(a) para confirmar mi pedido. ✨";
+    message += "----------------------------\n";
+    message += `TOTAL A PAGAR: $${total.toLocaleString('es-CO')} COP\n`;
+    message += "----------------------------\n\n";
+    message += "Quedo atento(a) a la confirmación de mi pedido. Gracias.";
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
