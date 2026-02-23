@@ -152,9 +152,10 @@ function renderCatalog() {
     filteredProducts.forEach((product, index) => {
         const card = document.createElement('div');
         card.classList.add('product-card');
+        const imgUrl = product.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         card.innerHTML = `
             <div class="product-img-wrapper">
-                <img src="${product.image}&w=600&q=80" alt="${product.title}" class="product-img" loading="lazy">
+                <img src="${imgUrl}" alt="${product.title}" class="product-img ${!product.image ? 'error' : ''}" loading="lazy" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.add('error');">
             </div>
             <div class="product-info">
                 <h3 class="product-title">${product.title}</h3>
@@ -206,7 +207,7 @@ function showToast(message) {
 
     const toast = document.createElement('div');
     toast.classList.add('toast');
-    toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${message}`;
+    toast.innerHTML = `< i class="fa-solid fa-check-circle" ></i > ${message} `;
     toastContainer.appendChild(toast);
 
     setTimeout(() => {
@@ -267,21 +268,21 @@ function renderCart() {
         const cartItem = document.createElement('div');
         cartItem.classList.add('cart-item');
         cartItem.innerHTML = `
-            <img src="${item.image}" alt="${item.title}" class="cart-item-img">
-            <div class="item-details">
-                <div class="item-header">
-                    <h4 class="cart-item-title">${item.title}</h4>
-                    <button class="remove-item-btn" data-id="${item.id}">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+            <img src="${item.image}" alt="${item.title}" class="cart-item-img" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.add('error');">
+                <div class="item-details">
+                    <div class="item-header">
+                        <h4 class="cart-item-title">${item.title}</h4>
+                        <button class="remove-item-btn" data-id="${item.id}">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <p class="cart-item-price">$${item.price.toLocaleString('es-CO')}</p>
+                    <div class="quantity-controls">
+                        <button class="qty-btn minus" data-id="${item.id}">-</button>
+                        <span class="qty-number">${item.quantity}</span>
+                        <button class="qty-btn plus" data-id="${item.id}">+</button>
+                    </div>
                 </div>
-                <p class="cart-item-price">$${item.price.toLocaleString('es-CO')}</p>
-                <div class="quantity-controls">
-                    <button class="qty-btn minus" data-id="${item.id}">-</button>
-                    <span class="qty-number">${item.quantity}</span>
-                    <button class="qty-btn plus" data-id="${item.id}">+</button>
-                </div>
-            </div>
         `;
 
         cartItem.querySelector('.minus').addEventListener('click', () => updateQuantity(item.id, -1));
@@ -366,10 +367,10 @@ function checkoutWhatsApp() {
 
     message += "DATOS DEL CLIENTE\n";
     message += "----------------------------\n";
-    message += `• Nombre: ${name}\n`;
-    message += `• Ciudad: ${city}\n`;
-    message += `• Dirección: ${address}\n`;
-    message += `• Teléfono: ${phone}\n\n`;
+    message += `• Nombre: ${name} \n`;
+    message += `• Ciudad: ${city} \n`;
+    message += `• Dirección: ${address} \n`;
+    message += `• Teléfono: ${phone} \n\n`;
 
     message += "DETALLE DEL PEDIDO\n";
     message += "----------------------------\n";
@@ -378,7 +379,7 @@ function checkoutWhatsApp() {
     cart.forEach(item => {
         const subtotal = item.price * item.quantity;
         total += subtotal;
-        message += `• ${item.title} (x${item.quantity})\n  Subtotal: $${subtotal.toLocaleString('es-CO')}\n\n`;
+        message += `• ${item.title} (x${item.quantity}) \n  Subtotal: $${subtotal.toLocaleString('es-CO')} \n\n`;
     });
 
     message += "----------------------------\n";
@@ -407,10 +408,17 @@ function closeCart() {
 
 // Modal Functions
 function openModal(product) {
-    modalImg.src = product.image;
+    modalImg.src = product.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    if (!product.image) modalImg.classList.add('error');
+    else modalImg.classList.remove('error');
+    modalImg.onerror = function () {
+        this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        this.classList.add('error');
+    };
     modalTitle.textContent = product.title;
     modalPrice.textContent = `$${product.price.toLocaleString('es-CO')} COP`;
     modalDesc.textContent = product.description;
+    modalAddBtn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> AÑADIR A LA BOLSA';
 
     // Clear previous event listener on modal button to avoid duplicates
     const newBtn = modalAddBtn.cloneNode(true);
