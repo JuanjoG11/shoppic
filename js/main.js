@@ -34,7 +34,7 @@ const modalImg = document.getElementById('modal-img');
 const modalTitle = document.getElementById('modal-title');
 const modalPrice = document.getElementById('modal-price');
 const modalDesc = document.getElementById('modal-desc');
-const modalAddBtn = document.getElementById('modal-add-btn');
+let modalAddBtn = document.getElementById('modal-add-btn');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -423,7 +423,8 @@ function openModal(product) {
     // Clear previous event listener on modal button to avoid duplicates
     const newBtn = modalAddBtn.cloneNode(true);
     modalAddBtn.parentNode.replaceChild(newBtn, modalAddBtn);
-    newBtn.addEventListener('click', () => {
+    modalAddBtn = newBtn; // Update global reference
+    modalAddBtn.addEventListener('click', () => {
         addToCart(product);
         closeModalFunc();
     });
