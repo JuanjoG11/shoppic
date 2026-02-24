@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadProducts() {
+    console.log('📦 SHOPPIC: Intentando cargar productos desde Supabase...');
     try {
         const { data, error } = await window.supabaseClient
             .from('products')
@@ -51,18 +52,58 @@ async function loadProducts() {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
+
+        if (data.length === 0) {
+            console.warn('⚠️ Supabase devolvió 0 productos. ¿La tabla está vacía o hubo error de permisos?');
+        } else {
+            console.log(`✅ ${data.length} productos cargados exitosamente.`);
+        }
+
         allProducts = data;
+        renderCategories();
         renderCatalog();
     } catch (error) {
-        console.error('Error loading products from Supabase:', error);
+        console.error('❌ Error cargando desde Supabase:', error);
         // Fallback to local products if they exist (from products.js)
         if (typeof window.products !== 'undefined' && allProducts.length === 0) {
+            console.log('🔄 Usando productos locales de respaldo (products.js)...');
             allProducts = window.products;
+            renderCategories();
             renderCatalog();
         } else {
-            catalogGrid.innerHTML = '<p class="no-results">Error al cargar productos. Por favor intenta de nuevo.</p>';
+            catalogGrid.innerHTML = '<p class="no-results">Error al cargar productos. Por favor revisa la consola.</p>';
         }
     }
+}
+
+function renderCategories() {
+    const container = document.getElementById('category-filters-container');
+    if (!container) return;
+
+    // Obtener categorías únicas
+    const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+
+    // Mantener el botón "Todo" y limpiar el resto
+    container.innerHTML = '<button class="filter-btn active" data-category="all">Todo</button>';
+
+    categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.category = cat;
+        btn.textContent = cat;
+        container.appendChild(btn);
+    });
+
+    // Re-vincular eventos a los nuevos botones
+    const newFilterBtns = container.querySelectorAll('.filter-btn');
+    newFilterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            newFilterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = btn.dataset.category;
+            renderCatalog();
+        });
+    });
 }
 
 // 3D Carousel Logic
@@ -324,15 +365,7 @@ function setupEventListeners() {
         renderCatalog();
     });
 
-    // Filters
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentCategory = btn.dataset.category;
-            renderCatalog();
-        });
-    });
+    // Filters (Manejados dinámicamente en renderCategories)
 
     // Cart Drawer
     cartBtn.addEventListener('click', openCart);
@@ -428,16 +461,45 @@ function closeCart() {
 
 // Modal Functions
 function openModal(product) {
-    modalImg.src = product.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    const mainImg = product.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    modalImg.src = mainImg;
+
     if (!product.image) modalImg.classList.add('error');
     else modalImg.classList.remove('error');
+
     modalImg.onerror = function () {
         this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         this.classList.add('error');
     };
+
     modalTitle.textContent = product.title;
     modalPrice.textContent = `$${product.price.toLocaleString('es-CO')} COP`;
     modalDesc.textContent = product.description;
+
+    // Gallery Thumbnails
+    const thumbContainer = document.getElementById('modal-thumbnails');
+    if (thumbContainer) {
+        thumbContainer.innerHTML = '';
+        const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
+
+        if (images.length > 1) {
+            images.forEach((imgUrl, idx) => {
+                const thumb = document.createElement('img');
+                thumb.src = imgUrl;
+                thumb.className = `modal-thumb ${imgUrl === mainImg ? 'active' : ''}`;
+                thumb.onclick = () => {
+                    modalImg.src = imgUrl;
+                    document.querySelectorAll('.modal-thumb').forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                };
+                thumbContainer.appendChild(thumb);
+            });
+            thumbContainer.style.display = 'flex';
+        } else {
+            thumbContainer.style.display = 'none';
+        }
+    }
+
     modalAddBtn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> AÑADIR A LA BOLSA';
 
     // Clear previous event listener on modal button to avoid duplicates
@@ -450,8 +512,7 @@ function openModal(product) {
     });
 
     modal.style.display = 'block';
-    // Overlay logic handled by modal internal backdrop, but if we want consistent overlay:
-    // overlay.classList.add('active'); // If using custom overlay instead of modal built-in
+    overlay.classList.add('active');
 }
 
 function closeModalFunc() {

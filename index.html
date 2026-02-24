@@ -194,12 +194,9 @@
                 <i class="fa-solid fa-search"></i>
                 <input type="text" id="search-input" placeholder="¿Qué buscas hoy?">
             </div>
-            <div class="filters">
+            <div class="filters" id="category-filters-container">
                 <button class="filter-btn active" data-category="all">Todo</button>
-                <button class="filter-btn" data-category="Hogar">Hogar</button>
-                <button class="filter-btn" data-category="Tecnología">Tecnología</button>
-                <button class="filter-btn" data-category="Niños">Niños</button>
-                <button class="filter-btn" data-category="Aseo">Aseo</button>
+                <!-- Categorías dinámicas inyectadas por JS -->
             </div>
         </section>
 
@@ -270,6 +267,7 @@
                     <h2 id="modal-title"></h2>
                     <p id="modal-price" class="price"></p>
                     <p id="modal-desc"></p>
+                    <div id="modal-thumbnails" class="modal-thumbnails"></div>
                     <button id="modal-add-btn" class="add-to-cart-btn">AÑADIR A LA BOLSA</button>
                 </div>
             </div>

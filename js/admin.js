@@ -4,6 +4,7 @@ const ADMIN_PASSWORD = 'shoppic2024';
 // State
 let adminProducts = [];
 let categories = ['Hogar', 'Tecnología', 'Niños', 'Aseo'];
+let currentFilterCategory = 'all';
 
 // ---- AUTH ----
 function login() {
@@ -29,10 +30,46 @@ function logout() {
     document.getElementById('admin-password').value = '';
 }
 
+// ---- UI TABS ----
+window.switchTab = (tabId) => {
+    // Hide all tabs
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('active');
+    });
+
+    // Deactivate all sidebar buttons
+    document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Show selected tab
+    const targetTab = document.getElementById(`tab-${tabId}`);
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+        targetTab.classList.add('active');
+    }
+
+    // Activate corresponding sidebar button
+    const activeBtn = document.getElementById(`btn-tab-${tabId}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Update page title based on tab
+    const pageTitle = document.getElementById('admin-page-title');
+    if (pageTitle) {
+        if (tabId === 'products') pageTitle.textContent = 'Gestión de Catálogo';
+        if (tabId === 'add-product') pageTitle.textContent = 'Añadir Producto';
+        if (tabId === 'categories') pageTitle.textContent = 'Gestión de Categorías';
+    }
+
+    // Special initialization for products tab
+    if (tabId === 'products') renderProductsTable();
+};
+
 // ---- INIT ----
 async function initAdmin() {
+    console.log('🚀 SHOPPIC ADMIN: Inicializando panel premium...');
+    setupEventListeners();
     await loadAdminProducts();
-    setupTabNav();
+    switchTab('products'); // Default tab
     setupNewProductPreview();
 }
 
@@ -44,7 +81,12 @@ async function loadAdminProducts() {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        adminProducts = data;
+
+        // Asegurar que cada producto tenga un array de imágenes
+        adminProducts = data.map(p => ({
+            ...p,
+            images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : [])
+        }));
 
         // Extract categories from products or use defaults
         const dbCategories = [...new Set(adminProducts.map(p => p.category).filter(Boolean))];
@@ -81,40 +123,40 @@ function populateCategorySelects() {
     });
 }
 
-// ---- TAB NAVIGATION ----
-function setupTabNav() {
-    const tabs = {
-        'products': { title: 'Gestión de Productos', sub: 'Edita, filtra y administra todo el catálogo' },
-        'add-product': { title: 'Agregar Producto', sub: 'Añade un nuevo producto al catálogo' },
-        'categories': { title: 'Categorías', sub: 'Agrega o elimina categorías del catálogo' },
-    };
-    document.querySelectorAll('.sidebar-btn[data-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabId = btn.dataset.tab;
-            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + tabId)?.classList.add('active');
-            document.getElementById('page-title').textContent = tabs[tabId]?.title || '';
-            document.getElementById('page-sub').textContent = tabs[tabId]?.sub || '';
-        });
-    });
 
-    // Search & filter on products tab
-    document.getElementById('admin-search-input').addEventListener('input', renderProductsTable);
-    document.getElementById('admin-cat-filter').addEventListener('change', renderProductsTable);
+function setupEventListeners() {
+    // Search
+    const searchInput = document.getElementById('admin-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderProductsTable(e.target.value);
+        });
+    }
+
+    // Category Filter
+    const catFilter = document.getElementById('admin-cat-filter');
+    if (catFilter) {
+        catFilter.addEventListener('change', (e) => {
+            currentFilterCategory = e.target.value;
+            renderProductsTable(document.getElementById('admin-search-input')?.value || '');
+        });
+    }
 }
 
 // ---- PRODUCTS TABLE ----
-function renderProductsTable() {
-    const search = document.getElementById('admin-search-input').value.toLowerCase();
-    const catFilter = document.getElementById('admin-cat-filter').value;
+function renderProductsTable(manualSearch = null) {
+    const searchInput = document.getElementById('admin-search-input');
+    const catFilterEl = document.getElementById('admin-cat-filter');
+
+    const search = (manualSearch !== null ? manualSearch : (searchInput ? searchInput.value : '')).toLowerCase();
+    const catFilter = catFilterEl ? catFilterEl.value : 'all';
     const tbody = document.getElementById('products-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     const filtered = adminProducts.filter(p => {
         const matchCat = catFilter === 'all' || p.category === catFilter;
-        const matchSearch = p.title.toLowerCase().includes(search) || String(p.id).includes(search);
+        const matchSearch = p.title.toLowerCase().includes(search) || String(p.id).toLowerCase().includes(search);
         return matchCat && matchSearch;
     });
 
@@ -125,8 +167,9 @@ function renderProductsTable() {
 
     filtered.forEach(product => {
         const tr = document.createElement('tr');
-        const imgCell = product.image
-            ? `<img src="${product.image}" alt="" class="table-img" onerror="this.outerHTML='<div class=\\'img-placeholder error\\'><i class=\\'fa-solid fa-image-slash\\'></i></div>'">`
+        const imgUrl = (product.images && product.images[0]) || product.image || '';
+        const imgCell = imgUrl
+            ? `<img src="${imgUrl}" alt="" class="table-img" onerror="this.src='https://via.placeholder.com/55?text=Error'">`
             : `<div class="img-placeholder"><i class="fa-solid fa-image"></i></div>`;
 
         tr.innerHTML = `
@@ -138,7 +181,7 @@ function renderProductsTable() {
             </td>
             <td><span class="cat-badge">${escHtml(product.category || '')}</span></td>
             <td>
-                <div class="table-actions">
+                <div class="table-actions" style="justify-content: flex-end;">
                     <button class="btn-icon" title="Editar" onclick="openEditModal('${escHtml(String(product.id))}')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
@@ -219,6 +262,10 @@ function openEditModal(id) {
     document.getElementById('edit-description').value = p.description || '';
     document.getElementById('edit-image').value = p.image || '';
 
+    // Galería multi-imagen
+    currentEditImages = Array.isArray(p.images) ? [...p.images] : (p.image ? [p.image] : []);
+    renderAdminGallery('edit-gallery-preview', currentEditImages, true);
+
     const editCatSelect = document.getElementById('edit-category');
     editCatSelect.innerHTML = '';
     categories.forEach(cat => {
@@ -228,10 +275,6 @@ function openEditModal(id) {
         if (cat === p.category) opt.selected = true;
         editCatSelect.appendChild(opt);
     });
-
-    const preview = document.getElementById('edit-img-preview');
-    if (p.image) { preview.src = p.image; preview.style.display = 'block'; }
-    else { preview.style.display = 'none'; }
 
     document.getElementById('edit-modal').classList.remove('hidden');
     document.getElementById('admin-overlay').classList.remove('hidden');
@@ -248,14 +291,26 @@ async function saveEditProduct() {
     const price = parseFloat(document.getElementById('edit-price').value);
     const category = document.getElementById('edit-category').value;
     const description = document.getElementById('edit-description').value.trim();
-    const image = document.getElementById('edit-image').value.trim();
+    const mainImage = document.getElementById('edit-image').value.trim();
+
+    // Si se pegó una URL manual que no está en la galería, agregarla
+    if (mainImage && !currentEditImages.includes(mainImage)) {
+        currentEditImages.unshift(mainImage);
+    }
 
     if (!title || isNaN(price)) { toast('Completa los campos requeridos', 'error'); return; }
 
     try {
         const { error } = await window.supabaseClient
             .from('products')
-            .update({ title, price, category, description, image })
+            .update({
+                title,
+                price,
+                category,
+                description,
+                image: currentEditImages[0] || '',
+                images: currentEditImages
+            })
             .eq('id', id);
 
         if (error) throw error;
@@ -294,23 +349,139 @@ function updatePreview() {
     previewImg.style.display = imgUrl ? 'block' : 'none';
 }
 
+// ---- IMAGE UPLOAD ----
+// ---- IMAGE GALLERY ----
+let currentEditImages = [];
+
+function renderAdminGallery(containerId, imagesArray, isEdit = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    imagesArray.forEach((url, index) => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item-admin';
+        item.innerHTML = `
+            <img src="${url}" alt="">
+            <button class="remove-img-btn" onclick="removeImageFromGallery(${index}, '${containerId}', ${isEdit})">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        `;
+        container.appendChild(item);
+    });
+}
+
+window.removeImageFromGallery = (index, containerId, isEdit) => {
+    if (isEdit) {
+        currentEditImages.splice(index, 1);
+        renderAdminGallery(containerId, currentEditImages, true);
+        document.getElementById('edit-image').value = currentEditImages[0] || '';
+    } else {
+        const newImages = document.getElementById('new-image').dataset.images ? JSON.parse(document.getElementById('new-image').dataset.images) : [];
+        newImages.splice(index, 1);
+        document.getElementById('new-image').dataset.images = JSON.stringify(newImages);
+        document.getElementById('new-image').value = newImages[0] || '';
+        renderAdminGallery(containerId, newImages, false);
+    }
+};
+
+async function handleFileUpload(inputEl, urlInputId, statusId, previewId) {
+    const files = Array.from(inputEl.files);
+    if (!files.length) return;
+
+    const statusEl = document.getElementById(statusId);
+    statusEl.textContent = `⏳ Subiendo ${files.length} archivo(s)...`;
+    statusEl.className = 'upload-status loading';
+
+    const isEdit = previewId === 'edit-gallery-preview';
+    let currentImages = [];
+    if (isEdit) {
+        currentImages = currentEditImages;
+    } else {
+        const saved = document.getElementById(urlInputId).dataset.images;
+        currentImages = saved ? JSON.parse(saved) : [];
+    }
+
+    try {
+        for (const file of files) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
+            const filePath = `products/${fileName}`;
+
+            const { data, error } = await window.supabaseClient.storage
+                .from('products')
+                .upload(filePath, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = window.supabaseClient.storage
+                .from('products')
+                .getPublicUrl(filePath);
+
+            currentImages.push(publicUrl);
+        }
+
+        document.getElementById(urlInputId).value = currentImages[0] || '';
+        if (!isEdit) {
+            document.getElementById(urlInputId).dataset.images = JSON.stringify(currentImages);
+        }
+
+        statusEl.textContent = '✅ Subida completada';
+        statusEl.className = 'upload-status success';
+
+        renderAdminGallery(previewId, currentImages, isEdit);
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        statusEl.textContent = '❌ Error al subir';
+        statusEl.className = 'upload-status error';
+        toast('Error al subir imágenes. Revisa el bucket de Supabase.', 'error');
+    }
+}
+
+// Bind upload events
+document.addEventListener('DOMContentLoaded', () => {
+    const newFileInput = document.getElementById('new-image-file');
+    if (newFileInput) {
+        newFileInput.multiple = true;
+        newFileInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target, 'new-image', 'new-upload-status', 'new-gallery-preview');
+        });
+    }
+
+    const editFileInput = document.getElementById('edit-image-file');
+    if (editFileInput) {
+        editFileInput.multiple = true;
+        editFileInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target, 'edit-image', 'edit-upload-status', 'edit-gallery-preview');
+        });
+    }
+});
+
 async function addNewProduct() {
     const title = document.getElementById('new-title').value.trim();
     const price = parseFloat(document.getElementById('new-price').value);
     const category = document.getElementById('new-category').value;
-    const image = document.getElementById('new-image').value.trim();
     const description = document.getElementById('new-description').value.trim();
+    const mainImage = document.getElementById('new-image').value.trim();
+
+    const savedImages = document.getElementById('new-image').dataset.images;
+    const images = savedImages ? JSON.parse(savedImages) : (mainImage ? [mainImage] : []);
 
     if (!title || isNaN(price) || !category) { toast('Completa nombre, precio y categoría', 'error'); return; }
 
     try {
+        // Generar un ID único corto para evitar problemas de búsqueda/URL
+        const uniqueId = Math.random().toString(36).substr(2, 9).toUpperCase();
+
         const newProduct = {
-            id: 'admin_' + Date.now(),
+            id: uniqueId,
             title,
             price,
             category,
-            image,
-            description
+            image: images[0] || '', // Imagen principal (para compatibilidad)
+            images: images,         // Galería completa
+            description,
+            created_at: new Date().toISOString()
         };
 
         const { error } = await window.supabaseClient
@@ -326,7 +497,9 @@ async function addNewProduct() {
 
         // Clear form
         ['new-title', 'new-price', 'new-image', 'new-description'].forEach(id => document.getElementById(id).value = '');
-        updatePreview();
+        document.getElementById('new-image').dataset.images = '[]';
+        renderAdminGallery('new-gallery-preview', []);
+
         toast('✅ Producto agregado exitosamente', 'success');
 
         // Switch to products tab
@@ -393,15 +566,26 @@ function deleteCategory(cat) {
 }
 
 // ---- TOAST ----
-function toast(msg, type = 'success') {
+// ---- UTILS & UI ----
+function toast(message, type = 'info') {
     const container = document.getElementById('admin-toast-container');
-    const el = document.createElement('div');
-    el.className = `admin-toast ${type}`;
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
-    el.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
-    container.appendChild(el);
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info');
+
+    toast.innerHTML = `
+        <i class="fa-solid ${icon}"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
     setTimeout(() => {
-        el.style.opacity = '0';
-        setTimeout(() => el.remove(), 500);
-    }, 3500);
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
