@@ -3,9 +3,7 @@ let cart = JSON.parse(localStorage.getItem('shoppic_cart')) || [];
 let currentCategory = 'all';
 let searchQuery = '';
 let carouselIndex = 0;
-
-// Data is now loaded from products.js
-
+let allProducts = []; // Reemplazamos 'products' para evitar conflictos con products.js
 
 // Global filter function for HTML onclick
 window.filterCategory = (category) => {
@@ -37,13 +35,35 @@ const modalDesc = document.getElementById('modal-desc');
 let modalAddBtn = document.getElementById('modal-add-btn');
 
 // Initialization
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initCarousel();
-    renderCatalog();
+    await loadProducts();
     renderCart();
     setupEventListeners();
     initScrollAnimations();
 });
+
+async function loadProducts() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allProducts = data;
+        renderCatalog();
+    } catch (error) {
+        console.error('Error loading products from Supabase:', error);
+        // Fallback to local products if they exist (from products.js)
+        if (typeof window.products !== 'undefined' && allProducts.length === 0) {
+            allProducts = window.products;
+            renderCatalog();
+        } else {
+            catalogGrid.innerHTML = '<p class="no-results">Error al cargar productos. Por favor intenta de nuevo.</p>';
+        }
+    }
+}
 
 // 3D Carousel Logic
 function initCarousel() {
@@ -138,7 +158,7 @@ function initScrollAnimations() {
 function renderCatalog() {
     catalogGrid.innerHTML = '';
 
-    const filteredProducts = products.filter(product => {
+    const filteredProducts = allProducts.filter(product => {
         const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
         const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
@@ -207,7 +227,7 @@ function showToast(message) {
 
     const toast = document.createElement('div');
     toast.classList.add('toast');
-    toast.innerHTML = `< i class="fa-solid fa-check-circle" ></i > ${message} `;
+    toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${message}`;
     toastContainer.appendChild(toast);
 
     setTimeout(() => {
