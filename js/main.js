@@ -36,7 +36,7 @@ let modalAddBtn = document.getElementById('modal-add-btn');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
-    initCarousel();
+    // initCarousel se llamará después de cargar productos
     await loadProducts();
     renderCart();
     setupEventListeners();
@@ -53,27 +53,73 @@ async function loadProducts() {
 
         if (error) throw error;
 
-        if (data.length === 0) {
-            console.warn('⚠️ Supabase devolvió 0 productos. ¿La tabla está vacía o hubo error de permisos?');
-        } else {
-            console.log(`✅ ${data.length} productos cargados exitosamente.`);
-        }
-
         allProducts = data;
         renderCategories();
+        renderCategoryCards(); // Nueva función dinámica
         renderCatalog();
+
+        // Inicializar carrusel DESPUÉS de renderizar tarjetas
+        setTimeout(() => initCarousel(), 100);
+
     } catch (error) {
         console.error('❌ Error cargando desde Supabase:', error);
-        // Fallback to local products if they exist (from products.js)
         if (typeof window.products !== 'undefined' && allProducts.length === 0) {
-            console.log('🔄 Usando productos locales de respaldo (products.js)...');
             allProducts = window.products;
             renderCategories();
+            renderCategoryCards();
             renderCatalog();
+            setTimeout(() => initCarousel(), 100);
         } else {
-            catalogGrid.innerHTML = '<p class="no-results">Error al cargar productos. Por favor revisa la consola.</p>';
+            catalogGrid.innerHTML = '<p class="no-results">Error al cargar productos.</p>';
         }
     }
+}
+
+const categoryImageMap = {
+    'Hogar': 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=800&auto=format&fit=crop',
+    'Tecnología': 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=800&auto=format&fit=crop',
+    'Aseo': 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=800&auto=format&fit=crop',
+    'Niños': 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=800&auto=format&fit=crop',
+    'Juguetería': 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=800&auto=format&fit=crop',
+    'Belleza': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=800&auto=format&fit=crop',
+    'Moda': 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop',
+    'Deportes': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop',
+    'Gym': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop',
+    'GYM': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop',
+    'Gimnasio': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop'
+};
+
+const defaultCategoryImage = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop';
+
+function renderCategoryCards() {
+    const container = document.getElementById('category-cards-container');
+    if (!container) return;
+
+    const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+    container.innerHTML = '';
+
+    categories.forEach((cat, index) => {
+        const trimmedCat = cat.trim();
+        const imageUrl = categoryImageMap[trimmedCat] ||
+            categoryImageMap[trimmedCat.charAt(0).toUpperCase() + trimmedCat.slice(1).toLowerCase()] ||
+            defaultCategoryImage;
+        const card = document.createElement('div');
+        card.className = `card-3d ${index === 0 ? 'active' : ''}`;
+        card.dataset.index = index;
+        card.onclick = () => window.filterCategory(cat);
+
+        card.innerHTML = `
+            <div class="card-inner">
+                <div class="card-badge">${cat.toUpperCase()}</div>
+                <img src="${imageUrl}" alt="${cat}" class="card-img">
+                <div class="card-bottom">
+                    <h3>${cat === 'Aseo' ? 'CUIDADO' : (cat === 'Hogar' ? 'AMBIENTES' : cat.toUpperCase())}</h3>
+                    <button>Ver Categoría</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
 }
 
 function renderCategories() {

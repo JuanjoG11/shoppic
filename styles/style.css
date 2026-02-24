@@ -251,13 +251,13 @@ body {
 
 .card-3d.far-prev {
     transform: translate3d(-400px, 0, -150px) rotateY(45deg) scale(0.7);
-    opacity: 0;
+    opacity: 0.2;
     pointer-events: none;
 }
 
 .card-3d.far-next {
     transform: translate3d(400px, 0, -150px) rotateY(-45deg) scale(0.7);
-    opacity: 0;
+    opacity: 0.2;
     pointer-events: none;
 }
 
@@ -441,7 +441,11 @@ body {
         transform: none !important;
         width: 100%;
         max-width: 320px;
-        height: 400px;
+        height: 350px;
+        position: relative;
+        opacity: 1 !important;
+        pointer-events: auto;
+        margin-bottom: 2rem;
     }
 
     .hero-title {
