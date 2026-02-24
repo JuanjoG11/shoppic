@@ -563,4 +563,5 @@ function openModal(product) {
 
 function closeModalFunc() {
     modal.style.display = 'none';
+    overlay.classList.remove('active'); // Quitar el overlay oscuro al cerrar el modal
 }
