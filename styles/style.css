@@ -430,22 +430,47 @@ body {
     background: #20b355;
 }
 
-/* Responsive */
+/* Responsive Mobile */
 @media (max-width: 768px) {
+
+    /* Carousel: mantener en modo 3D, no columna */
     .cards-3d-container {
-        flex-direction: column;
+        flex-direction: row;
+        min-height: 520px;
     }
 
-    .card-3d,
-    .card-3d:nth-child(n) {
-        transform: none !important;
-        width: 100%;
-        max-width: 320px;
-        height: 350px;
-        position: relative;
-        opacity: 1 !important;
-        pointer-events: auto;
-        margin-bottom: 2rem;
+    .hero-3d-section {
+        padding: 2rem 0;
+    }
+
+    .hero-text-content {
+        margin-bottom: 0.5rem;
+    }
+
+    .card-3d {
+        width: 310px;
+        height: 500px;
+        margin-bottom: 0;
+    }
+
+    /* Tipografía productos */
+    .product-title {
+        font-size: 0.85rem;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .product-price {
+        font-size: 1rem;
+    }
+
+    .add-btn {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.75rem;
+        gap: 4px;
     }
 
     .hero-title {
@@ -1285,32 +1310,31 @@ body {
 
     /* Mobile Carousel Adjustment */
     .card-3d {
-        width: 200px;
-        height: 280px;
+        width: 310px !important;
+        height: 500px !important;
+    }
+
+    .cards-3d-container {
+        min-height: 550px !important;
     }
 
     .card-3d.active {
-        transform: translate3d(0, 0, 100px) rotateY(0deg);
+        transform: translate3d(0, 0, 100px) rotateY(0deg) !important;
+        z-index: 100;
     }
 
     .card-3d.prev-card {
-        transform: translate3d(-80px, 0, -60px) rotateY(15deg) scale(0.85) !important;
-        opacity: 0.7 !important;
-        filter: brightness(0.6);
+        transform: translate3d(-180px, 0, -120px) rotateY(30deg) scale(0.85) !important;
+        opacity: 0.3 !important;
     }
 
     .card-3d.next-card {
-        transform: translate3d(80px, 0, -60px) rotateY(-15deg) scale(0.85) !important;
-        opacity: 0.7 !important;
-        filter: brightness(0.6);
+        transform: translate3d(180px, 0, -120px) rotateY(-30deg) scale(0.85) !important;
+        opacity: 0.3 !important;
     }
 
     .carousel-wrapper {
         padding: 0 20px;
-    }
-
-    .cards-3d-container {
-        min-height: 320px;
     }
 }
 
